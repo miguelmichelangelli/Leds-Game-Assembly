@@ -16,9 +16,9 @@ INICIO:
     BSF STATUS, RP0
 
     ; activo los puertos 0, 1 y 2 como entradas (aquí irán lo botones)
-    BSF TRISB, RB0
-    BSF TRISB, RB1
-    BSF TRISB, RB2
+    BSF TRISB, 0
+    BSF TRISB, 1
+    BSF TRISB, 2
 
     ; activo el puerto 3 como salida (aquí irá el led)
     BCF TRISB, 3
@@ -33,25 +33,25 @@ INICIO:
 
 ; creo la etiqueta principal, donde correrá mi programa
 PRINCIPAL:
-    BTFSC PORTB, RB0 ; "saltar la siguiente línea si botón 0 no se presionó"
+    BTFSC PORTB, 0 ; "saltar la siguiente línea si botón 0 no se presionó"
     CALL TURN_ON
 
-    BTFSC PORTB, RB1 ; "saltar la siguiente línea si botón 1 no se presionó"
+    BTFSC PORTB, 1 ; "saltar la siguiente línea si botón 1 no se presionó"
     CALL TURN_OFF
 
-    BTFSC PORTB, RB2 ; "saltar la siguiente línea si botón 2 no se presionó"
+    BTFSC PORTB, 2 ; "saltar la siguiente línea si botón 2 no se presionó"
     CALL BLINK
 
     GOTO PRINCIPAL ; repetimos nuevamente el bloque principal
 
 ; subrutina para encender el led (Botón 0)
 TURN_ON:
-    BSF PORTB, RB3
+    BSF PORTB, 3
     RETURN
 
 ; subrutina para apagar el led (Botón 1)
 TURN_OFF:
-    BCF PORTB, RB3
+    BCF PORTB, 3
     RETURN
 
 ; subrutina para activar el parpadeo del led (Botón 2)
@@ -60,20 +60,20 @@ BLINK:
 
     CALL RETARDO ; causamos un retardo para que se aprecie el cambio al ojo humano
 
-    BTFSC PORTB, RB0 ; "saltar la siguiente línea si botón 0 no se presionó"
+    BTFSC PORTB, 0 ; "saltar la siguiente línea si botón 0 no se presionó"
     GOTO TURN_ON_EXIT ; si se presiona el botón vamos al bloque de salida con encendido de led
 
-    BTFSC PORTB, RB1 ; "saltar la siguiente línea si botón 1 no se presionó"
+    BTFSC PORTB, 1 ; "saltar la siguiente línea si botón 1 no se presionó"
     GOTO TURN_OFF_EXIT ; si se presiona el botón vamos al bloque de salida con apagado de led
 
     CALL TURN_OFF ; llamamos la subrutina de apagado de led
 
     CALL RETARDO ; causamos un retardo para que se aprecie el cambio al ojo humano
 
-    BTFSC PORTB, RB0 ; "saltar la siguiente línea si botón 0 no se presionó"
+    BTFSC PORTB, 0 ; "saltar la siguiente línea si botón 0 no se presionó"
     GOTO TURN_ON_EXIT ; si se presiona el botón vamos al bloque de salida con encendido de led
 
-    BTFSC PORTB, RB1  ; "saltar la siguiente línea si botón 1 no se presionó"
+    BTFSC PORTB, 1  ; "saltar la siguiente línea si botón 1 no se presionó"
     GOTO TURN_OFF_EXIT ; si se presiona el botón vamos al bloque de salida con apagado de led
 
     GOTO BLINK ; volvemos a empezar todo el ciclo
