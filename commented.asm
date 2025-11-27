@@ -8,7 +8,7 @@
     IS_OFF      EQU 21h     ; Bandera para estado Apagado
     IS_BLINKING EQU 22h     ; Bandera para estado Parpadeo
     IS_PULSED   EQU 23h     ; Bandera "chismosa": avisa si se presionó algo
-    TIEMPO_A    EQU 24h     ; Variables para contar el tiempo (Retardo)
+    TIEMPO_A    EQU 24h     ; Variables para manejar el retardo
     TIEMPO_B    EQU 25h
     TIEMPO_C    EQU 26h
     
@@ -23,7 +23,7 @@ INICIO:
     BSF STATUS, RP0 ; Pasamos al Banco 1 para configurar entradas/salidas
 
     MOVLW 0x06
-    MOVWF ADCON1    ; Importante: Ponemos el Puerto A y B como Digitales (no análogos)
+    MOVWF ADCON1    ; IMPORTANTE: Ponemos el Puerto A y B como Digitales (no análogos)
 
     ; Configuramos RB0, RB1 y RB2 como ENTRADAS (Botones)
     BSF TRISB, 0
@@ -53,20 +53,6 @@ PRINCIPAL:
     CALL MENU
     GOTO PRINCIPAL
 
-; --- GESTOR DE ESTADOS ---
-; Decide qué hacer según qué bandera esté activa
-MENU:
-    BTFSC IS_ON, 0          ; ¿Está activa la bandera de encendido?
-    CALL TURN_ON
-
-    BTFSC IS_OFF, 0         ; ¿Está activa la de apagado?
-    CALL TURN_OFF
-
-    BTFSC IS_BLINKING, 0    ; ¿Está activa la de parpadeo?
-    CALL BLINK
-
-    RETURN
-
 ; --- LECTURA DE HARDWARE ---
 ; Mira los pines físicos del PIC. Si hay un botón presionado, llama a su rutina.
 REVISAR_BOTONES:
@@ -78,6 +64,20 @@ REVISAR_BOTONES:
 
     BTFSC PORTB, 2          ; Si RB2 es 0, salta
     CALL BUTTON_2
+
+    RETURN
+
+; --- GESTOR DE ESTADOS ---
+; Decide qué hacer según qué bandera esté activa
+MENU:
+    BTFSC IS_ON, 0          ; ¿Está activa la bandera de encendido?
+    CALL TURN_ON
+
+    BTFSC IS_OFF, 0         ; ¿Está activa la de apagado?
+    CALL TURN_OFF
+
+    BTFSC IS_BLINKING, 0    ; ¿Está activa la de parpadeo?
+    CALL BLINK
 
     RETURN
 
@@ -95,4 +95,82 @@ BUTTON_1:
 
 BUTTON_2:
     BSF IS_BLINKING, 0  ; Pide parpadear
-    BS
+    BSF IS_PULSED, 0
+    RETURN
+
+; --- ACCIONES DEL LED ---
+TURN_ON:
+    CLRF IS_PULSED      ; Ya atendimos el pulso, limpiamos la bandera
+    CLRF IS_ON          ; Limpiamos la solicitud
+    BSF PORTB, 3        ; Encendemos el LED físicamente
+    RETURN
+
+TURN_OFF:
+    CLRF IS_PULSED
+    CLRF IS_OFF
+    BCF PORTB, 3        ; Apagamos el LED físicamente
+    RETURN
+
+; --- RUTINA DE PARPADEO ---
+BLINK:
+    CLRF IS_PULSED
+    CLRF IS_BLINKING
+
+    ; 1. Encendemos
+    CALL TURN_ON
+
+    ; 2. Esperamos tiempo (Revisando botones mientras tanto)
+    CALL RETARDO
+
+    ; 3. Seguridad: Si alguien presionó un botón durante la espera, salimos YA
+    BTFSC IS_PULSED, 0
+    RETURN
+
+    ; 4. Apagamos
+    CALL TURN_OFF
+
+    ; 5. Esperamos otra vez
+    CALL RETARDO
+    
+    ; 6. Seguridad de nuevo (para respuesta rápida)
+    BTFSC IS_PULSED, 0
+    RETURN
+
+    GOTO BLINK          ; Si nadie tocó nada, repite el ciclo
+
+; --- RUTINA DE RETARDO INTELIGENTE ---
+; Dura aprox 0.5s, pero revisa los botones DENTRO del bucle
+RETARDO:
+    MOVLW d'45'         ; Cargamos contadores calculados para 0.5s
+    MOVWF TIEMPO_A
+
+LAZO_A:
+    MOVLW d'100'
+    MOVWF TIEMPO_B
+
+LAZO_B:
+    MOVLW d'10'
+    MOVWF TIEMPO_C
+
+LAZO_C:
+    ; --- TRUCO CLAVE ---
+    ; En lugar de solo perder tiempo, aprovechamos para mirar los botones
+    CALL REVISAR_BOTONES
+    
+    ; Si se detectó un botón, rompemos el retardo y regresamos inmediatamente
+    BTFSC IS_PULSED, 0
+    RETURN
+    
+    ; Decrementamos los contadores de tiempo
+    DECFSZ TIEMPO_C, 1
+    GOTO LAZO_C
+
+    DECFSZ TIEMPO_B, 1
+    GOTO LAZO_B
+
+    DECFSZ LAZO_A, 1
+    GOTO LAZO_A
+
+    RETURN
+
+    END
