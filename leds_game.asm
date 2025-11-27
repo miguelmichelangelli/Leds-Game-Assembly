@@ -1,11 +1,11 @@
-#include <p16f877a.inc>
-__CONFIG _FOSC_XT & _WDTE_OFF & _PWRTE_OFF & _BOREN_OFF & _LVP_OFF & _CPD_OFF & _WRT_OFF & _CP_OFF
-
-; variables
-CONTADOR EQU 20h ; creo una variable para manejar mas facil el contador
-
-ORG 0x00 
-GOTO INICIO
+    #include <p16f877a.inc>
+    __CONFIG _FOSC_XT & _WDTE_OFF & _PWRTE_OFF & _BOREN_OFF & _LVP_OFF & _CPD_OFF & _WRT_OFF & _CP_OFF
+    
+    ; variables
+    CONTADOR EQU 20h ; creo una variable para manejar mas facil el contador
+    
+    ORG 0x00 
+    GOTO INICIO
 
 INICIO:
     ; limpio el banco de memoria
@@ -86,7 +86,7 @@ RETARDO:
 BUCLE:
     DECFSZ CONTADOR, 1 ; disminuye en 1 el contador, cuando llega a 0 salta la línea siguiente
     GOTO BUCLE
-RETURN
+    RETURN
 
 ; bloque de salida de BLINK con encendido de led
 TURN_ON_EXIT:
@@ -99,3 +99,4 @@ TURN_OFF_EXIT:
     GOTO PRINCIPAL ; vuelve al bloque principal
 
     END
+
