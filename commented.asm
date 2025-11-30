@@ -1,4 +1,4 @@
-#include <p16f877a.inc>
+    #include <p16f877a.inc>
     ; Configuración básica: Oscilador XT, sin perro guardián y protección apagada
     __CONFIG _FOSC_XT & _WDTE_OFF & _PWRTE_OFF & _BOREN_OFF & _LVP_OFF & _CPD_OFF & _WRT_OFF & _CP_OFF
     
